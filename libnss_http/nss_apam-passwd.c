@@ -1,6 +1,4 @@
 #include <errno.h>
-#include <grp.h>
-#include <jansson.h>
 #include <nss.h>
 #include <pthread.h>
 #include <pwd.h>
@@ -10,6 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include "passwd-util.h"
 
 static pthread_mutex_t NSS_APAM_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 #define NSS_APAM_LOCK()    do { pthread_mutex_lock(&NSS_APAM_MUTEX); } while (0)
@@ -18,13 +17,6 @@ static pthread_mutex_t NSS_APAM_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 enum nss_status _nss_http_endpwent(void);
 enum nss_status _nss_http_setpwent(int stayopen);
 enum nss_status _nss_http_getpwent_r(struct passwd *result, char *buffer, size_t buflen, int *errnop);
-
-// functions from passwd-util.c
-int load_passwd(void);
-struct passwd* get_next_passwd(void);
-struct passwd* find_pwd_name(const char* name); 
-struct passwd* find_pwd_uid(uid_t uid);
-//
 
 static enum nss_status
 _nss_http_setpwent_locked(int stayopen)
