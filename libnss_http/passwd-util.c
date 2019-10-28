@@ -16,35 +16,6 @@ struct passwd_node {
 };
 
 static struct passwd_node *head = NULL;
-static struct passwd_node *curr = NULL;
-
-struct passwd *get_curr(void) {
-    if (curr == NULL) {
-        load_passwd();
-        curr = head;
-    }
-    
-    if (curr == NULL) {
-        return NULL;
-    }
-
-    curr = curr->next;
-    struct passwd *result = curr->pwd;
-
-    return result;
-}
-
-void reset_curr(void) {
-    if (curr == NULL) {
-        load_passwd();
-        curr = head;
-    }
-    curr = head;
-}
-
-void close_curr(void) {
-    curr = NULL;
-}
 
 static struct passwd* get_passwd(char *line) {
     struct passwd* result = malloc(sizeof(struct passwd));
@@ -91,24 +62,6 @@ static struct passwd* get_passwd(char *line) {
     }
 
     return result;
-}
-
-static void print_passwd(const struct passwd *p) {
-    if (p == NULL) {
-        printf("Empty passwd...\n");
-        return;
-    }
-
-    printf("name=%s, uid=%u, gid=%u, dir=%s, shell=%s\n", p->pw_name, p->pw_uid, p->pw_gid, p->pw_dir, p->pw_shell);
-}
-
-static void print_all(void) {
-    struct passwd_node *node = head->next;
-
-    while (node != NULL) {
-        print_passwd(node->pwd);
-        node = node->next;
-    }
 }
 
 static void free_all(void) {
@@ -180,10 +133,31 @@ struct passwd* find_uid(uid_t uid) {
         if (node->pwd->pw_uid == uid) {
             return node->pwd;
         }
+
         node = node->next;
     }
 
     return NULL;
+}
+
+
+#ifndef NDEBUG
+static void print_passwd(const struct passwd *p) {
+    if (p == NULL) {
+        printf("Empty passwd...\n");
+        return;
+    }
+
+    printf("name=%s, uid=%u, gid=%u, dir=%s, shell=%s\n", p->pw_name, p->pw_uid, p->pw_gid, p->pw_dir, p->pw_shell);
+}
+
+static void print_all(void) {
+    struct passwd_node *node = head->next;
+
+    while (node != NULL) {
+        print_passwd(node->pwd);
+        node = node->next;
+    }
 }
 
 static void test_find_name(const char *name) {
@@ -197,23 +171,21 @@ static void test_find_id(const uid_t id) {
     print_passwd(pwd);
     printf("\n");
 }
-
 int main(int argc, char **argv) {
     while (1) {
+        load_passwd();
+        print_all();
+        printf("\n");
 
-    load_passwd();
-    print_all();
-    printf("\n");
+        test_find_name("mike");
+        test_find_name("root");
+        test_find_name("xxxx");
 
-    test_find_name("mike");
-    test_find_name("root");
-    test_find_name("xxxx");
-
-    test_find_id(124);
-    test_find_id(1000);
-    test_find_id(1240);
-
+        test_find_id(124);
+        test_find_id(1000);
+        test_find_id(1240);
     }
 
     return 0;
 }
+#endif

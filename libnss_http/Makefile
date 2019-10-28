@@ -21,16 +21,16 @@ passwd-test:
 	$(CC) $(CFLAGS) passwd-util.c -o $(BUILD)/passwd-test
 
 passwd-util:
-	$(CC) $(CFLAGS) -c passwd-util.c -o $(BUILD)/passwd-util.o
+	$(CC) $(CFLAGS) -DNDEBUG -c passwd-util.c -o $(BUILD)/passwd-util.o
 
 apam-passwd:
-	$(CC) $(CFLAGS) -c apam-passwd.c -o $(BUILD)/apam-passwd.o
+	$(CC) $(CFLAGS) -DNDEBUG -c apam-passwd.c -o $(BUILD)/apam-passwd.o
 
 apam-group:
-	$(CC) $(CFLAGS) -c apam-group.c -o $(BUILD)/apam-group.o
+	$(CC) $(CFLAGS) -DNDEBUG -c apam-group.c -o $(BUILD)/apam-group.o
 
 apam-shadow:
-	$(CC) $(CFLAGS) -c apam-shadow.c -o $(BUILD)/apam-shadow.o
+	$(CC) $(CFLAGS) -DNDEBUG -c apam-shadow.c -o $(BUILD)/apam-shadow.o
 
 apam_services: apam-passwd apam-group apam-shadow passwd-util
 
