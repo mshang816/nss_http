@@ -36,7 +36,6 @@ nss_http_services: nss_http-passwd nss_http-group nss_http-shadow passwd-util
 
 nss_http: nss_http_build_dir nss_http_services
 	$(CC) -shared $(LD_SONAME) -o $(BUILD)/$(LIBRARY) \
-		$(BUILD)/nss_http.o \
 		$(BUILD)/nss_http-passwd.o \
 		$(BUILD)/nss_http-group.o \
 		$(BUILD)/nss_http-shadow.o \
