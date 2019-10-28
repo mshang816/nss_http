@@ -14,12 +14,12 @@ static pthread_mutex_t NSS_APAM_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 #define NSS_APAM_LOCK()    do { pthread_mutex_lock(&NSS_APAM_MUTEX); } while (0)
 #define NSS_APAM_UNLOCK()  do { pthread_mutex_unlock(&NSS_APAM_MUTEX); } while (0)
 
-enum nss_status _nss_http_endpwent(void);
-enum nss_status _nss_http_setpwent(int stayopen);
-enum nss_status _nss_http_getpwent_r(struct passwd *result, char *buffer, size_t buflen, int *errnop);
+enum nss_status _nss_apam_endpwent(void);
+enum nss_status _nss_apam_setpwent(int stayopen);
+enum nss_status _nss_apam_getpwent_r(struct passwd *result, char *buffer, size_t buflen, int *errnop);
 
 static enum nss_status
-_nss_http_setpwent_locked(int stayopen)
+_nss_apam_setpwent_locked(int stayopen)
 {
     load_passwd();
     return NSS_STATUS_SUCCESS;
@@ -28,18 +28,18 @@ _nss_http_setpwent_locked(int stayopen)
 
 // Called to open the passwd file
 enum nss_status
-_nss_http_setpwent(int stayopen)
+_nss_apam_setpwent(int stayopen)
 {
     enum nss_status ret;
     NSS_APAM_LOCK();
-    ret = _nss_http_setpwent_locked(stayopen);
+    ret = _nss_apam_setpwent_locked(stayopen);
     NSS_APAM_UNLOCK();
     return ret;
 }
 
 
 static enum nss_status
-_nss_http_endpwent_locked(void)
+_nss_apam_endpwent_locked(void)
 {
     // do nothing
     return NSS_STATUS_SUCCESS;
@@ -48,11 +48,11 @@ _nss_http_endpwent_locked(void)
 
 // Called to close the passwd file
 enum nss_status
-_nss_http_endpwent(void)
+_nss_apam_endpwent(void)
 {
     enum nss_status ret;
     NSS_APAM_LOCK();
-    ret = _nss_http_endpwent_locked();
+    ret = _nss_apam_endpwent_locked();
     NSS_APAM_UNLOCK();
     return ret;
 }
@@ -82,7 +82,7 @@ static void copy_passwd(struct passwd *result, char *buffer, size_t buflen, stru
 }
 
 static enum nss_status
-_nss_http_getpwent_r_locked(struct passwd *result, char *buffer, size_t buflen, int *errnop)
+_nss_apam_getpwent_r_locked(struct passwd *result, char *buffer, size_t buflen, int *errnop)
 {
     struct passwd* pwd = get_next_passwd();
 
@@ -98,11 +98,11 @@ _nss_http_getpwent_r_locked(struct passwd *result, char *buffer, size_t buflen, 
 
 // Called to look up next entry in passwd file
 enum nss_status
-_nss_http_getpwent_r(struct passwd *result, char *buffer, size_t buflen, int *errnop)
+_nss_apam_getpwent_r(struct passwd *result, char *buffer, size_t buflen, int *errnop)
 {
     enum nss_status ret;
     NSS_APAM_LOCK();
-    ret = _nss_http_getpwent_r_locked(result, buffer, buflen, errnop);
+    ret = _nss_apam_getpwent_r_locked(result, buffer, buflen, errnop);
     NSS_APAM_UNLOCK();
     return ret;
 }
@@ -110,7 +110,7 @@ _nss_http_getpwent_r(struct passwd *result, char *buffer, size_t buflen, int *er
 
 // Find a passwd by uid
 static enum nss_status
-_nss_http_getpwuid_r_locked(uid_t uid, struct passwd *result, char *buffer, size_t buflen, int *errnop)
+_nss_apam_getpwuid_r_locked(uid_t uid, struct passwd *result, char *buffer, size_t buflen, int *errnop)
 {
     struct passwd *pwd = find_pwd_uid(uid);
 
@@ -125,18 +125,18 @@ _nss_http_getpwuid_r_locked(uid_t uid, struct passwd *result, char *buffer, size
 
 
 enum nss_status
-_nss_http_getpwuid_r(uid_t uid, struct passwd *result, char *buffer, size_t buflen, int *errnop)
+_nss_apam_getpwuid_r(uid_t uid, struct passwd *result, char *buffer, size_t buflen, int *errnop)
 {
     enum nss_status ret;
     NSS_APAM_LOCK();
-    ret = _nss_http_getpwuid_r_locked(uid, result, buffer, buflen, errnop);
+    ret = _nss_apam_getpwuid_r_locked(uid, result, buffer, buflen, errnop);
     NSS_APAM_UNLOCK();
     return ret;
 }
 
 
 static enum nss_status
-_nss_http_getpwnam_r_locked(const char *name, struct passwd *result, char *buffer, size_t buflen, int *errnop)
+_nss_apam_getpwnam_r_locked(const char *name, struct passwd *result, char *buffer, size_t buflen, int *errnop)
 {
     struct passwd *pwd = find_pwd_name(name);
 
@@ -152,11 +152,11 @@ _nss_http_getpwnam_r_locked(const char *name, struct passwd *result, char *buffe
 
 // Find a passwd by name
 enum nss_status
-_nss_http_getpwnam_r(const char *name, struct passwd *result, char *buffer, size_t buflen, int *errnop)
+_nss_apam_getpwnam_r(const char *name, struct passwd *result, char *buffer, size_t buflen, int *errnop)
 {
     enum nss_status ret;
     NSS_APAM_LOCK();
-    ret = _nss_http_getpwnam_r_locked(name, result, buffer, buflen, errnop);
+    ret = _nss_apam_getpwnam_r_locked(name, result, buffer, buflen, errnop);
     NSS_APAM_UNLOCK();
     return ret;
 }

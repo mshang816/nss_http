@@ -2,7 +2,7 @@ CC=gcc
 #CFLAGS=-Wall -Wstrict-prototypes -Werror -fPIC -std=c99
 CFLAGS=-Wall -Wstrict-prototypes -Werror -fPIC -std=gnu99 -g
 
-LD_SONAME=-Wl,-soname,libapam.so.2
+LD_SONAME=-Wl,-soname,libnss_apam.so.2
 LIBRARY=libnss_apam.so.2.0
 LINKS=libnss_apam.so.2 libnss_apam.so
 
@@ -35,16 +35,14 @@ nss_apam-passwd:
 nss_apam-group:
 	$(CC) $(CFLAGS) -DNDEBUG -c nss_apam-group.c -o $(BUILD)/nss_apam-group.o
 
-nss_apam-shadow:
-	$(CC) $(CFLAGS) -DNDEBUG -c nss_apam-shadow.c -o $(BUILD)/nss_apam-shadow.o
-
-nss_apam_services: nss_apam-passwd nss_apam-group nss_apam-shadow passwd-util group-util
+nss_apam_services: nss_apam-passwd nss_apam-group passwd-util group-util
 
 nss_apam: nss_apam_build_dir nss_apam_services
 	$(CC) -shared $(LD_SONAME) -o $(BUILD)/$(LIBRARY) \
 		$(BUILD)/nss_apam-passwd.o \
 		$(BUILD)/nss_apam-group.o \
-		$(BUILD)/nss_apam-shadow.o
+        $(BUILD)/passwd-util.o \
+        $(BUILD)/group-util.o
 
 clean:
 	rm -rf $(BUILD)
