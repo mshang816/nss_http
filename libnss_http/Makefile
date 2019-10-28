@@ -1,5 +1,6 @@
 CC=gcc
-CFLAGS=-Wall -Wstrict-prototypes -Werror -fPIC -std=c99
+#CFLAGS=-Wall -Wstrict-prototypes -Werror -fPIC -std=c99
+CFLAGS=-Wall -Wstrict-prototypes -Werror -fPIC -std=gnu99 -g
 
 LD_SONAME=-Wl,-soname,libnss_http.so.2
 LIBRARY=libnss_http.so.2.0
@@ -10,11 +11,17 @@ PREFIX=$(DESTDIR)/usr
 LIBDIR=$(PREFIX)/lib
 BUILD=.libs
 
-default: build
+default: build passwd-test
 build: nss_http
 
 nss_http_build_dir:
 	[ -d $(BUILD) ] || mkdir $(BUILD)
+
+passwd-test:
+	$(CC) $(CFLAGS) passwd-util.c -o $(BUILD)/passwd-test
+
+passwd-util:
+	$(CC) $(CFLAGS) -c passwd-util.c -o $(BUILD)/passwd-util.o
 
 nss_http-passwd:
 	$(CC) $(CFLAGS) -c nss_http-passwd.c -o $(BUILD)/nss_http-passwd.o
@@ -25,11 +32,9 @@ nss_http-group:
 nss_http-shadow:
 	$(CC) $(CFLAGS) -c nss_http-shadow.c -o $(BUILD)/nss_http-shadow.o
 
-nss_http_services: nss_http-passwd nss_http-group nss_http-shadow
+nss_http_services: nss_http-passwd nss_http-group nss_http-shadow passwd-util
 
 nss_http: nss_http_build_dir nss_http_services
-	$(CC) $(CFLAGS) -c nss_http.c -o $(BUILD)/nss_http.o
-
 	$(CC) -shared $(LD_SONAME) -o $(BUILD)/$(LIBRARY) \
 		$(BUILD)/nss_http.o \
 		$(BUILD)/nss_http-passwd.o \
