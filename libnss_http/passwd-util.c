@@ -16,16 +16,22 @@ struct passwd_node {
 };
 
 static struct passwd_node *head = NULL;
+static struct passwd_node *curr = NULL;
 
-static struct passwd* get_passwd(char *line) {
+static struct passwd* get_passwd(const char *line) {
     struct passwd* result = malloc(sizeof(struct passwd));
 
-    char *token;
+    if (result == NULL) {
+        return NULL;
+    }
+
     char *s_ptr = NULL;
+    char *l = (char*)line;
     int i = 0, n = 0;
 
-    while (1) {
-        token = strtok_r(line, ":", &s_ptr); 
+    for (;;) {
+        char *token = strtok_r(l, ":", &s_ptr); 
+
         if (token == NULL) {
             break;
         }
@@ -57,8 +63,8 @@ static struct passwd* get_passwd(char *line) {
                 ;
         }
 
-        line = NULL;
-        i++;
+        l = NULL;
+        ++i;
     }
 
     return result;
@@ -83,6 +89,18 @@ static void free_all(void) {
         free(temp);
     }
 }
+
+struct passwd* get_next_passwd(void) {
+    if (curr == NULL) {
+        return NULL;
+    }
+
+    struct passwd *result = curr->pwd;
+    curr = curr->next;
+
+    return result;
+}
+
 
 int load_passwd(void) {
     free_all();
@@ -110,10 +128,12 @@ int load_passwd(void) {
     }
 
     fclose(f);
+    // reset curr to first node
+    curr = head->next;
     return 0;
 }
 
-struct passwd* find_name(const char* name) {
+struct passwd* find_pwd_name(const char* name) {
     struct passwd_node *node = head->next;
 
     while (node != NULL) {
@@ -126,7 +146,7 @@ struct passwd* find_name(const char* name) {
     return NULL;
 }
 
-struct passwd* find_uid(uid_t uid) {
+struct passwd* find_pwd_uid(uid_t uid) {
     struct passwd_node *node = head->next;
 
     while (node != NULL) {
@@ -151,7 +171,7 @@ static void print_passwd(const struct passwd *p) {
     printf("name=%s, uid=%u, gid=%u, dir=%s, shell=%s\n", p->pw_name, p->pw_uid, p->pw_gid, p->pw_dir, p->pw_shell);
 }
 
-static void print_all(void) {
+static void print_all_1(void) {
     struct passwd_node *node = head->next;
 
     while (node != NULL) {
@@ -160,22 +180,33 @@ static void print_all(void) {
     }
 }
 
+static void print_all_2(void) {
+    struct passwd *pwd = NULL;
+
+    while ((pwd = get_next_passwd()) != NULL) {
+        print_passwd(pwd);
+    }
+}
+
 static void test_find_name(const char *name) {
-    struct passwd *pwd = find_name(name);
+    struct passwd *pwd = find_pwd_name(name);
     print_passwd(pwd);
-    printf("\n");
 }
 
 static void test_find_id(const uid_t id) {
-    struct passwd *pwd = find_uid(id);
+    struct passwd *pwd = find_pwd_uid(id);
     print_passwd(pwd);
-    printf("\n");
 }
+
 int main(int argc, char **argv) {
     while (1) {
         load_passwd();
-        print_all();
+        print_all_1();
         printf("\n");
+
+        print_all_2();
+        printf("\n");
+
 
         test_find_name("mike");
         test_find_name("root");

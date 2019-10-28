@@ -11,7 +11,7 @@ PREFIX=$(DESTDIR)/usr
 LIBDIR=$(PREFIX)/lib
 BUILD=.libs
 
-default: build passwd-test
+default: build passwd-test group-test
 build: nss_apam
 
 nss_apam_build_dir:
@@ -20,8 +20,14 @@ nss_apam_build_dir:
 passwd-test:
 	$(CC) $(CFLAGS) passwd-util.c -o $(BUILD)/passwd-test
 
+group-test:
+	$(CC) $(CFLAGS) group-util.c -o $(BUILD)/group-test
+
 passwd-util:
 	$(CC) $(CFLAGS) -DNDEBUG -c passwd-util.c -o $(BUILD)/passwd-util.o
+
+group-util:
+	$(CC) $(CFLAGS) -DNDEBUG -c group-util.c -o $(BUILD)/group-util.o
 
 nss_apam-passwd:
 	$(CC) $(CFLAGS) -DNDEBUG -c nss_apam-passwd.c -o $(BUILD)/nss_apam-passwd.o
@@ -32,7 +38,7 @@ nss_apam-group:
 nss_apam-shadow:
 	$(CC) $(CFLAGS) -DNDEBUG -c nss_apam-shadow.c -o $(BUILD)/nss_apam-shadow.o
 
-nss_apam_services: nss_apam-passwd nss_apam-group nss_apam-shadow passwd-util
+nss_apam_services: nss_apam-passwd nss_apam-group nss_apam-shadow passwd-util group-util
 
 nss_apam: nss_apam_build_dir nss_apam_services
 	$(CC) -shared $(LD_SONAME) -o $(BUILD)/$(LIBRARY) \
