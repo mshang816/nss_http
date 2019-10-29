@@ -37,14 +37,14 @@ nss_apam-group:
 
 nss_apam_services: nss_apam-passwd nss_apam-group passwd-util group-util
 
-nss_apam: nss_apam_build_dir nss_apam_services
+nss_apam: nss_apam_build_dir nss_apam_services links
 	$(CC) -shared $(LD_SONAME) -o $(BUILD)/$(LIBRARY) \
 		$(BUILD)/nss_apam-passwd.o \
 		$(BUILD)/nss_apam-group.o \
         $(BUILD)/passwd-util.o \
         $(BUILD)/group-util.o
 
-nss_apam-test: nss_apam links
+nss_apam-test: nss_apam
 	$(CC) -o $(BUILD)/nss_apam-test nss_apam-test.c -L$(BUILD) -lnss_apam
 
 links:

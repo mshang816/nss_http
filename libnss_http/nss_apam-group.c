@@ -11,6 +11,8 @@
 #include <sys/types.h>
 #include "group-util.h"
 
+#define DYNAMIC_USER_PASSWD      "x"
+
 static pthread_mutex_t NSS_APAM_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 #define NSS_APAM_LOCK()    do { pthread_mutex_lock(&NSS_APAM_MUTEX); } while (0)
 #define NSS_apam_UNLOCK()  do { pthread_mutex_unlock(&NSS_APAM_MUTEX); } while (0)
@@ -70,17 +72,21 @@ static void copy_group(struct group *result, char *buffer, size_t buflen, struct
     len -= tlen;
     buf += tlen;
 
+    /*
     result->gr_passwd  = strncpy(buf, grp->gr_passwd, len);
     tlen = strlen(result->gr_passwd) + 1;
     len -= tlen;
-    buf += tlen;
+    buf += tlen;*/
 
-    result->gr_gid   = grp->gr_gid;
+    result->gr_passwd = DYNAMIC_USER_PASSWD;
+    result->gr_gid    = grp->gr_gid;
 }
 
 enum nss_status
 _nss_apam_getgrent_r_locked(struct group *result, char *buffer, size_t buflen, int *errnop)
 {
+    memset(buffer, '\0', buflen);
+
     struct group *grp = get_next_group();
 
     if (grp == NULL) {
@@ -109,6 +115,8 @@ _nss_apam_getgrent_r(struct group *result, char *buffer, size_t buflen, int *err
 enum nss_status
 _nss_apam_getgrgid_r_locked(gid_t gid, struct group *result, char *buffer, size_t buflen, int *errnop)
 {
+    memset(buffer, '\0', buflen);
+
     struct group *grp = find_grp_gid(gid);
 
     if (grp == NULL) {
@@ -135,6 +143,8 @@ _nss_apam_getgrgid_r(gid_t gid, struct group *result, char *buffer, size_t bufle
 enum nss_status
 _nss_apam_getgrnam_r_locked(const char *name, struct group *result, char *buffer, size_t buflen, int *errnop)
 {
+    memset(buffer, '\0', buflen);
+
     struct group *grp = find_grp_name(name);
 
     if (grp == NULL) {

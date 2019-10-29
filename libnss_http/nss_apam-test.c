@@ -28,7 +28,7 @@ while (1) {
     ret = _nss_apam_setpwent(0);
 
     while (_nss_apam_getpwent_r(&pwd, buffer, BUFFER_LEN, &_errno) == NSS_STATUS_SUCCESS) {
-        printf("name=%s, dir=%s, shell=%s\n", pwd.pw_name, pwd.pw_dir, pwd.pw_shell);
+        printf("name=%s, dir=%s, shell=%s, passwd=%s\n", pwd.pw_name, pwd.pw_dir, pwd.pw_shell, pwd.pw_passwd);
     }
     ret = _nss_apam_endpwent();
     printf("\n");

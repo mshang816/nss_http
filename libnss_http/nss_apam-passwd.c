@@ -10,6 +10,11 @@
 #include <sys/types.h>
 #include "passwd-util.h"
 
+#define DYNAMIC_USER_GECOS       "Dynamic User"
+#define DYNAMIC_USER_PASSWD      "x"
+#define DYNAMIC_USER_DIR         "/home"
+#define DYNAMIC_USER_SHELL       "/bin/bash"
+
 static pthread_mutex_t NSS_APAM_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 #define NSS_APAM_LOCK()    do { pthread_mutex_lock(&NSS_APAM_MUTEX); } while (0)
 #define NSS_APAM_UNLOCK()  do { pthread_mutex_unlock(&NSS_APAM_MUTEX); } while (0)
@@ -43,7 +48,7 @@ _nss_apam_setpwent(int stayopen)
 static enum nss_status
 _nss_apam_endpwent_locked(void)
 {
-    // do nothing
+    free_all_passwd();
     return NSS_STATUS_SUCCESS;
 }
 
@@ -69,6 +74,7 @@ static void copy_passwd(struct passwd *result, char *buffer, size_t buflen, stru
     len -= tlen;
     buf += tlen;
 
+    /*
     result->pw_dir   = strncpy(buf, pwd->pw_dir, len);
     tlen = strlen(result->pw_dir) + 1;
     len -= tlen;
@@ -78,14 +84,22 @@ static void copy_passwd(struct passwd *result, char *buffer, size_t buflen, stru
     tlen = strlen(result->pw_shell) + 1;
     len -= tlen;
     buf += tlen;
+    */
 
     result->pw_uid   = pwd->pw_uid;
     result->pw_gid   = pwd->pw_gid;
+
+    result->pw_gecos  = (char*) DYNAMIC_USER_GECOS;
+    result->pw_passwd = (char*) DYNAMIC_USER_PASSWD;
+    result->pw_shell  = (char*) DYNAMIC_USER_SHELL;
+    result->pw_dir    = (char*) DYNAMIC_USER_DIR;
 }
 
 static enum nss_status
 _nss_apam_getpwent_r_locked(struct passwd *result, char *buffer, size_t buflen, int *errnop)
 {
+    memset(buffer, '\0', buflen);
+
     struct passwd* pwd = get_next_passwd();
 
     if (pwd == NULL) {
@@ -114,6 +128,8 @@ _nss_apam_getpwent_r(struct passwd *result, char *buffer, size_t buflen, int *er
 static enum nss_status
 _nss_apam_getpwuid_r_locked(uid_t uid, struct passwd *result, char *buffer, size_t buflen, int *errnop)
 {
+    memset(buffer, '\0', buflen);
+
     struct passwd *pwd = find_pwd_uid(uid);
 
     if (pwd == NULL) {
@@ -140,6 +156,8 @@ _nss_apam_getpwuid_r(uid_t uid, struct passwd *result, char *buffer, size_t bufl
 static enum nss_status
 _nss_apam_getpwnam_r_locked(const char *name, struct passwd *result, char *buffer, size_t buflen, int *errnop)
 {
+    memset(buffer, '\0', buflen);
+
     struct passwd *pwd = find_pwd_name(name);
 
     if (pwd == NULL) {

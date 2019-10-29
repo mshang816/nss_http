@@ -70,7 +70,7 @@ static struct passwd* get_passwd(const char *line) {
     return result;
 }
 
-static void free_all(void) {
+void free_all_passwd(void) {
     if (head == NULL) {
         return;
     }
@@ -88,6 +88,9 @@ static void free_all(void) {
         node = node->next;
         free(temp);
     }
+
+    head->next = NULL;
+    curr = NULL;
 }
 
 struct passwd* get_next_passwd(void) {
@@ -103,7 +106,7 @@ struct passwd* get_next_passwd(void) {
 
 
 int load_passwd(void) {
-    free_all();
+    free_all_passwd();
 
     char line[LENGTH];
     FILE *f = fopen(PASSWD_FILE, "r");
@@ -134,12 +137,15 @@ int load_passwd(void) {
 }
 
 struct passwd* find_pwd_name(const char* name) {
+    load_passwd();
+
     struct passwd_node *node = head->next;
 
     while (node != NULL) {
         if (!strcmp(node->pwd->pw_name, name)) {
             return node->pwd;
         }
+
         node = node->next;
     }
 
@@ -147,6 +153,8 @@ struct passwd* find_pwd_name(const char* name) {
 }
 
 struct passwd* find_pwd_uid(uid_t uid) {
+    load_passwd();
+
     struct passwd_node *node = head->next;
 
     while (node != NULL) {

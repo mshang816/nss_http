@@ -122,6 +122,8 @@ int load_group(void) {
 }
 
 struct group* find_grp_name(const char* name) {
+    load_group();
+
     struct group_node *node = head->next;
 
     while (node != NULL) {
@@ -136,6 +138,8 @@ struct group* find_grp_name(const char* name) {
 }
 
 struct group* find_grp_gid(gid_t gid) {
+    load_group();
+
     struct group_node *node = head->next;
 
     while (node != NULL) {
