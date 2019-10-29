@@ -9,21 +9,11 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include "passwd-util.h"
-
-#define DYNAMIC_USER_GECOS       "Dynamic User"
-#define DYNAMIC_USER_PASSWD      "x"
-#define DYNAMIC_USER_DIR         "/home"
-#define DYNAMIC_USER_SHELL       "/bin/bash"
+#include "nss_apam.h"
 
 static pthread_mutex_t NSS_APAM_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 #define NSS_APAM_LOCK()    do { pthread_mutex_lock(&NSS_APAM_MUTEX); } while (0)
 #define NSS_APAM_UNLOCK()  do { pthread_mutex_unlock(&NSS_APAM_MUTEX); } while (0)
-
-enum nss_status _nss_apam_endpwent(void);
-enum nss_status _nss_apam_setpwent(int stayopen);
-enum nss_status _nss_apam_getpwent_r(struct passwd *result, char *buffer, size_t buflen, int *errnop);
-enum nss_status _nss_apam_getpwuid_r(uid_t uid, struct passwd *result, char *buffer, size_t buflen, int *errnop);
-enum nss_status _nss_apam_getpwnam_r(const char *name, struct passwd *result, char *buffer, size_t buflen, int *errnop);
 
 static enum nss_status
 _nss_apam_setpwent_locked(int stayopen)

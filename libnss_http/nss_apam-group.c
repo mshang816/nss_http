@@ -10,18 +10,11 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include "group-util.h"
-
-#define DYNAMIC_USER_PASSWD      "x"
+#include "nss_apam.h"
 
 static pthread_mutex_t NSS_APAM_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 #define NSS_APAM_LOCK()    do { pthread_mutex_lock(&NSS_APAM_MUTEX); } while (0)
 #define NSS_apam_UNLOCK()  do { pthread_mutex_unlock(&NSS_APAM_MUTEX); } while (0)
-
-enum nss_status _nss_apam_endgrent(void);
-enum nss_status _nss_apam_setgrent(int stayopen);
-enum nss_status _nss_apam_getgrent_r(struct group *result, char *buffer, size_t buflen, int *errnop);
-enum nss_status _nss_apam_getgrgid_r(gid_t gid, struct group *result, char *buffer, size_t buflen, int *errnop);
-enum nss_status _nss_apam_getgrnam_r(const char *name, struct group *result, char *buffer, size_t buflen, int *errnop);
 
 enum nss_status
 _nss_apam_setgrent_locked(int stayopen)
@@ -69,6 +62,11 @@ static void copy_group(struct group *result, char *buffer, size_t buflen, struct
 
     result->gr_name  = strncpy(buf, grp->gr_name, len);
     tlen = strlen(result->gr_name) + 1;
+    len -= tlen;
+    buf += tlen;
+
+    result->gr_mem = (char**) buf;
+    tlen = sizeof(char*);
     len -= tlen;
     buf += tlen;
 
