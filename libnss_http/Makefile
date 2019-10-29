@@ -44,6 +44,15 @@ nss_apam: nss_apam_build_dir nss_apam_services
         $(BUILD)/passwd-util.o \
         $(BUILD)/group-util.o
 
+nss_apam-test: nss_apam links
+	$(CC) -o $(BUILD)/nss_apam-test nss_apam-test.c -L$(BUILD) -lnss_apam
+
+links:
+	cd $(BUILD); for link in $(LINKS); do ln -sf $(LIBRARY) $$link ; done ; cd -
+
+test:
+	LD_LIBRARY_PATH=$(BUILD) $(BUILD)/nss_apam-test
+
 clean:
 	rm -rf $(BUILD)
 
@@ -52,4 +61,4 @@ install:
 	install $(BUILD)/$(LIBRARY) $(LIBDIR)
 	cd $(LIBDIR); for link in $(LINKS); do ln -sf $(LIBRARY) $$link ; done
 
-.PHONY: clean install nss_apam_build_dir nss_apam
+.PHONY: clean install nss_apam_build_dir nss_apam test

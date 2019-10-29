@@ -18,6 +18,8 @@ static pthread_mutex_t NSS_APAM_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 enum nss_status _nss_apam_endgrent(void);
 enum nss_status _nss_apam_setgrent(int stayopen);
 enum nss_status _nss_apam_getgrent_r(struct group *result, char *buffer, size_t buflen, int *errnop);
+enum nss_status _nss_apam_getgrgid_r(gid_t gid, struct group *result, char *buffer, size_t buflen, int *errnop);
+enum nss_status _nss_apam_getgrnam_r(const char *name, struct group *result, char *buffer, size_t buflen, int *errnop);
 
 enum nss_status
 _nss_apam_setgrent_locked(int stayopen)
