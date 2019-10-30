@@ -9,24 +9,74 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#define SSH_KEYS_PATH "/etc/ssh/keys"
-#define AUTH_KEYS_FILE "authorized_keys"
-#define BUFFER_LENGTH 512
+#include "pwdgrp-util.h"
 
-struct user_entry_node {
-    struct user_entry *ent;
-    struct user_entry_node *next;
-};
+#define SSH_KEYS_PATH   "/etc/ssh/keys"
+#define AUTH_KEYS_FILE  "authorized_keys"
+#define BUFFER_LENGTH   512
 
-struct user_entry_node *head;
-struct user_entry_node *curr;
+static struct user_entry_node *head;
+static struct user_entry_node *curr;
 
-struct user_entry {
-    const char  *name;
-    uid_t       uid;
-    time_t      create_time;
-};
+struct user_entry* get_next_user_entry() {
+    if (curr == NULL) {
+        return NULL;
+    }
 
+    struct user_entry* result = curr->ent;
+    curr = curr->next;
+
+    return result;
+}
+
+void free_all_entries(void) {
+    struct user_entry_node *node = head->next;
+    head->next = NULL;
+    curr = NULL;
+
+    while (node != NULL) {
+        struct user_entry *ent = node->ent;
+
+        free(ent->name);
+
+        free(ent);
+
+        struct user_entry_node *t = node;
+        node = node->next;
+
+        free(t);
+    }
+}
+
+struct user_entry* find_entry_uid(uid_t uid) {
+    struct user_entry *result = NULL;
+    free_all_entries();
+    load_all_entries(NULL);
+
+    while (curr != NULL) {
+        if (curr->ent->uid == uid) {
+            // duplicate the found user_entry
+            result = (struct user_entry*)malloc(sizeof(struct user_entry));
+            result->name = strdup(curr->ent->name);
+            result->uid = curr->ent->uid;
+            result->create_time = curr->ent->create_time;
+            break;
+        }
+
+        curr = curr->next;
+    }
+    free_all_entries();
+    return result;
+}
+
+void free_entry(struct user_entry *ent) {
+    if (ent == NULL) {
+        return;
+    }
+
+    free(ent->name);
+    free(ent);
+}
 
 static int is_number(const char *num) {
     while (num != NULL && !isdigit(*num++)) {
@@ -59,7 +109,7 @@ static uid_t read_uid(const char *name) {
     return atoi(buffer);
 }
 
-struct user_entry* read_user_entry(const char *name) {
+struct user_entry* find_entry_name(const char *name) {
     char auth_keys_file[BUFFER_LENGTH];
     sprintf(auth_keys_file, "%s/%s/%s", SSH_KEYS_PATH, name, AUTH_KEYS_FILE);
 
@@ -74,7 +124,8 @@ struct user_entry* read_user_entry(const char *name) {
         return NULL;
     }
 
-    struct user_entry *ret = (struct user_entry*)malloc(sizeof(struct user_entry()));
+    // duplicate the user_entry
+    struct user_entry *ret = (struct user_entry*)malloc(sizeof(struct user_entry));
     ret->name = strdup(name);
     ret->uid = uid;
     ret->create_time = statbuf.st_mtim.tv_sec;
@@ -82,12 +133,16 @@ struct user_entry* read_user_entry(const char *name) {
     return ret;
 }
 
-static int dir_enum(uid_t *ret_max) {
+int load_all_entries(uid_t *ret_max) {
     uid_t max = 0;
     DIR *dir = opendir(SSH_KEYS_PATH);
 
     if (dir == NULL) {
         return 1;
+    }
+
+    if (head == NULL) {
+        head = (struct user_entry_node*)malloc(sizeof(struct user_entry_node));
     }
 
     struct dirent *de;
@@ -103,7 +158,7 @@ static int dir_enum(uid_t *ret_max) {
             continue;
         }
         
-        struct user_entry *ent = read_user_entry(de->d_name);
+        struct user_entry *ent = find_entry_name(de->d_name);
 
         if (ent == NULL) {
             continue;
@@ -123,33 +178,62 @@ static int dir_enum(uid_t *ret_max) {
         *ret_max = max;
     }
 
+    curr = head->next;
+
     return 0;
 }
 
+#ifndef NDEBUG
+
+static void print_entry(struct user_entry *e) {
+    if (e == NULL) {
+        printf("null entry...\n");
+    } else {
+        printf("name=%s uid=%d time=%ld\n", e->name, e->uid, e->create_time);
+    }
+}
 
 int main(int argc, char **argv) {
+while (1) {
     time_t now = time(NULL);
 
     printf("the time now is %ld\n", now);
 
-    if (head == NULL) {
-        head = (struct user_entry_node*)malloc(sizeof(struct user_entry_node));
-    }
-
     uid_t max = 0;
-    int ret = dir_enum(&max);
+    int ret = load_all_entries(&max);
 
     curr = head->next;
 
     while (curr != NULL) {
         struct user_entry *e = curr->ent;
-
-        printf("name=%s uid=%d time=%ld\n", e->name, e->uid, e->create_time);
-
+        print_entry(e);
         curr = curr->next;
     }
 
     printf("max uid is %d\n", max);
+    free_all_entries();
 
+    struct user_entry *ent;
+    ent = find_entry_name("mike");
+    print_entry(ent);
+    free_entry(ent);
+    ent = find_entry_name("david");
+    print_entry(ent);
+    free_entry(ent);
+    ent = find_entry_name("wwww");
+    print_entry(ent);
+    free_entry(ent);
+
+    ent = find_entry_uid(65536);
+    print_entry(ent);
+    free_entry(ent);
+    ent = find_entry_uid(65535);
+    print_entry(ent);
+    free_entry(ent);
+    ent = find_entry_uid(65534);
+    print_entry(ent);
+    free_entry(ent);
+}
     return 0;
 }
+#endif

@@ -11,41 +11,27 @@ PREFIX=$(DESTDIR)/usr
 LIBDIR=$(PREFIX)/lib
 BUILD=.libs
 
-default: build passwd-test group-test
+default: build
 build: nss_apam
 
 nss_apam_build_dir:
 	[ -d $(BUILD) ] || mkdir $(BUILD)
 
-passwd-test:
-	$(CC) $(CFLAGS) passwd-util.c -o $(BUILD)/passwd-test
+pwdgrp-util:
+	$(CC) $(CFLAGS) -DNDEBUG -c pwdgrp-util.c -o $(BUILD)/pwdgrp-util.o
 
-group-test:
-	$(CC) $(CFLAGS) group-util.c -o $(BUILD)/group-test
+nss_apam-obj:
+	$(CC) $(CFLAGS) -DNDEBUG -c nss_apam.c -o $(BUILD)/nss_apam.o
 
-passwd-util:
-	$(CC) $(CFLAGS) -DNDEBUG -c passwd-util.c -o $(BUILD)/passwd-util.o
-
-group-util:
-	$(CC) $(CFLAGS) -DNDEBUG -c group-util.c -o $(BUILD)/group-util.o
-
-nss_apam-passwd:
-	$(CC) $(CFLAGS) -DNDEBUG -c nss_apam-passwd.c -o $(BUILD)/nss_apam-passwd.o
-
-nss_apam-group:
-	$(CC) $(CFLAGS) -DNDEBUG -c nss_apam-group.c -o $(BUILD)/nss_apam-group.o
-
-nss_apam_services: nss_apam-passwd nss_apam-group passwd-util group-util
+nss_apam_services: nss_apam-obj pwdgrp-util
 
 nss_apam: nss_apam_build_dir nss_apam_services links
 	$(CC) -shared $(LD_SONAME) -o $(BUILD)/$(LIBRARY) \
-		$(BUILD)/nss_apam-passwd.o \
-		$(BUILD)/nss_apam-group.o \
-        $(BUILD)/passwd-util.o \
-        $(BUILD)/group-util.o
+		$(BUILD)/nss_apam.o \
+        $(BUILD)/pwdgrp-util.o 
 
 nss_apam-test: nss_apam
-	$(CC) -o $(BUILD)/nss_apam-test nss_apam-test.c -L$(BUILD) -lnss_apam
+	$(CC) -g -o $(BUILD)/nss_apam-test nss_apam-test.c -L$(BUILD) -lnss_apam
 
 links:
 	cd $(BUILD); for link in $(LINKS); do ln -sf $(LIBRARY) $$link ; done ; cd -
@@ -61,4 +47,4 @@ install:
 	install $(BUILD)/$(LIBRARY) $(LIBDIR)
 	cd $(LIBDIR); for link in $(LINKS); do ln -sf $(LIBRARY) $$link ; done
 
-.PHONY: clean install nss_apam_build_dir nss_apam test
+.PHONY: clean install nss_apam_build_dir nss_apam test pwdgrp-util
