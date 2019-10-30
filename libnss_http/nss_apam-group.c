@@ -14,7 +14,7 @@
 
 static pthread_mutex_t NSS_APAM_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 #define NSS_APAM_LOCK()    do { pthread_mutex_lock(&NSS_APAM_MUTEX); } while (0)
-#define NSS_apam_UNLOCK()  do { pthread_mutex_unlock(&NSS_APAM_MUTEX); } while (0)
+#define NSS_APAM_UNLOCK()  do { pthread_mutex_unlock(&NSS_APAM_MUTEX); } while (0)
 
 enum nss_status
 _nss_apam_setgrent_locked(int stayopen)
@@ -31,7 +31,7 @@ _nss_apam_setgrent(int stayopen)
     enum nss_status ret;
     NSS_APAM_LOCK();
     ret = _nss_apam_setgrent_locked(stayopen);
-    NSS_apam_UNLOCK();
+    NSS_APAM_UNLOCK();
     return ret;
 }
 
@@ -51,7 +51,7 @@ _nss_apam_endgrent(void)
     enum nss_status ret;
     NSS_APAM_LOCK();
     ret = _nss_apam_endgrent_locked();
-    NSS_apam_UNLOCK();
+    NSS_APAM_UNLOCK();
     return ret;
 }
 
@@ -104,7 +104,7 @@ _nss_apam_getgrent_r(struct group *result, char *buffer, size_t buflen, int *err
     enum nss_status ret;
     NSS_APAM_LOCK();
     ret = _nss_apam_getgrent_r_locked(result, buffer, buflen, errnop);
-    NSS_apam_UNLOCK();
+    NSS_APAM_UNLOCK();
     return ret;
 }
 
@@ -133,7 +133,7 @@ _nss_apam_getgrgid_r(gid_t gid, struct group *result, char *buffer, size_t bufle
     enum nss_status ret;
     NSS_APAM_LOCK();
     ret = _nss_apam_getgrgid_r_locked(gid, result, buffer, buflen, errnop);
-    NSS_apam_UNLOCK();
+    NSS_APAM_UNLOCK();
     return ret;
 }
 
@@ -162,7 +162,7 @@ _nss_apam_getgrnam_r(const char *name, struct group *result, char *buffer, size_
     enum nss_status ret;
     NSS_APAM_LOCK();
     ret = _nss_apam_getgrnam_r_locked(name, result, buffer, buflen, errnop);
-    NSS_apam_UNLOCK();
+    NSS_APAM_UNLOCK();
     return ret;
 }
 
