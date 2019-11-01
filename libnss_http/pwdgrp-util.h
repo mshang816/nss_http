@@ -1,6 +1,9 @@
 #define APAM_GROUP          "apam"
 #define APAM_GID            50000
 #define SECONDS_BEFORE_EXP  (30*60)
+#define SSH_KEYS_PATH       "/var/ssh/keys"
+#define AUTH_KEYS_FILE      "authorized_keys"
+#define BUFFER_LENGTH       512
 
 struct user_entry {
     char        *name;

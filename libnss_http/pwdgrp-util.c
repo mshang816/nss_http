@@ -11,10 +11,6 @@
 
 #include "pwdgrp-util.h"
 
-#define SSH_KEYS_PATH   "/var/ssh/keys"
-#define AUTH_KEYS_FILE  "authorized_keys"
-#define BUFFER_LENGTH   512
-
 static struct user_entry_node *head;
 static struct user_entry_node *curr;
 static time_t now = 0;
@@ -50,12 +46,6 @@ void free_all_entries(void) {
     curr = NULL;
 
     while (node != NULL) {
-        /*
-        struct user_entry *ent = node->ent;
-
-        free(ent->name);
-        free(ent);*/
-
         free_entry(node->ent);
 
         struct user_entry_node *t = node;
@@ -267,7 +257,6 @@ size_t load_all_entries(uid_t *ret_max) {
 }
 
 #ifndef NDEBUG
-
 static void print_entry(struct user_entry *e) {
     if (e == NULL) {
         printf("null entry...\n");
