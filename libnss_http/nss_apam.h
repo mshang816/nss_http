@@ -2,10 +2,11 @@
 #include <pwd.h>
 #include <grp.h>
 
-#define DYNAMIC_USER_GECOS       "Dynamic User"
-#define DYNAMIC_USER_PASSWD      "*"
-#define DYNAMIC_USER_DIR         "/home"
-#define DYNAMIC_USER_SHELL       "/bin/bash"
+#define USER_SHELL          "/bin/bash"
+#define USER_NOSHELL        "/sbin/nologin"
+#define USER_PASSWD         "*"
+#define USER_DIR            "/var/home"
+#define USER_GECOS          "Dynamic User"
 
 /// passwd
 enum nss_status _nss_apam_setpwent(int stayopen);
