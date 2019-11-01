@@ -19,6 +19,15 @@ static struct user_entry_node *head;
 static struct user_entry_node *curr;
 static time_t now = 0;
 
+void prepend_user_entry(struct user_entry *ent) {
+    struct user_entry_node *node = (struct user_entry_node*) malloc (sizeof(struct user_entry_node));
+
+    node->ent = ent;
+    node->next = head->next;
+    head->next = node;
+    curr = head->next;
+}
+
 struct user_entry* get_next_user_entry() {
     if (curr == NULL) {
         return NULL;
@@ -41,17 +50,19 @@ void free_all_entries(void) {
     curr = NULL;
 
     while (node != NULL) {
+        /*
         struct user_entry *ent = node->ent;
 
         free(ent->name);
-        free(ent);
+        free(ent);*/
+
+        free_entry(node->ent);
 
         struct user_entry_node *t = node;
         node = node->next;
 
         free(t);
     }
-
 }
 
 // make sure load_all_entries() is called first
@@ -238,7 +249,7 @@ size_t load_all_entries(uid_t *ret_max) {
 
         max = ent->uid > max ? ent->uid : max;
 
-        if (ent->create_time + SECONDS_BEFORE_EXP < now) {
+        if (ent->create_time + SECONDS_BEFORE_EXP > now) {
             ++count;
         }
     }

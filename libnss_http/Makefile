@@ -36,7 +36,7 @@ nss_apam-test: nss_apam
 links:
 	cd $(BUILD); for link in $(LINKS); do ln -sf $(LIBRARY) $$link ; done ; cd -
 
-test:
+test: nss_apam-test
 	LD_LIBRARY_PATH=$(BUILD) $(BUILD)/nss_apam-test
 
 clean:

@@ -118,6 +118,8 @@ while (1) {
     ret = _nss_apam_endgrent();
     printf("\n");
 
+    test_find_grp_name("overlake");
+
     test_find_pwd_name("mike");
     test_find_pwd_name("noone");
     test_find_pwd_uid(65536);

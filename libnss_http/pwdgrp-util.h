@@ -21,3 +21,4 @@ void    free_entry(struct user_entry*);
 struct  user_entry* find_entry_name(const char *name);
 struct  user_entry* find_entry_uid(uid_t uid);
 size_t  load_all_entries(uid_t *ret_max);
+void    prepend_user_entry(struct user_entry *ent);

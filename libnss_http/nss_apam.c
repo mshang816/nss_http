@@ -102,7 +102,6 @@ _nss_apam_getpwent_r_locked(struct passwd *result, char *buffer, size_t buflen, 
     return NSS_STATUS_SUCCESS;
 }
 
-
 // Called to look up next entry in passwd file
 enum nss_status
 _nss_apam_getpwent_r(struct passwd *result, char *buffer, size_t buflen, int *errnop) {
@@ -173,7 +172,9 @@ _nss_apam_getpwnam_r(const char *name, struct passwd *result, char *buffer, size
 enum nss_status
 _nss_apam_setgrent_locked(int stayopen)
 {
+    struct user_entry *ent = find_entry_uid(APAM_GID);
     load_all_entries(NULL);
+    prepend_user_entry(ent);
     return NSS_STATUS_SUCCESS;
 }
 
@@ -233,7 +234,7 @@ static void copy_group(struct group *result, char *buffer, size_t buflen, struct
 
         while (*members != NULL) {
             *dest = strncpy(buf, *members, len);
-            tlen  = strlen(*dest);
+            tlen  = strlen(*dest) + 1;
             len -= tlen;
             buf += tlen;
     
