@@ -11,7 +11,7 @@
 
 #include "pwdgrp-util.h"
 
-#define SSH_KEYS_PATH   "/etc/ssh/keys"
+#define SSH_KEYS_PATH   "/var/ssh/keys"
 #define AUTH_KEYS_FILE  "authorized_keys"
 #define BUFFER_LENGTH   512
 
@@ -30,6 +30,9 @@ struct user_entry* get_next_user_entry() {
 }
 
 void free_all_entries(void) {
+    if (head == NULL) {
+        return;
+    }
     struct user_entry_node *node = head->next;
     head->next = NULL;
     curr = NULL;
@@ -143,6 +146,7 @@ int load_all_entries(uid_t *ret_max) {
 
     if (head == NULL) {
         head = (struct user_entry_node*)malloc(sizeof(struct user_entry_node));
+        head->next = NULL;
     }
 
     struct dirent *de;
@@ -160,7 +164,7 @@ int load_all_entries(uid_t *ret_max) {
         
         struct user_entry *ent = find_entry_name(de->d_name);
 
-        if (ent == NULL) {
+        if (ent == NULL || ent->uid == 0) {
             continue;
         }
 

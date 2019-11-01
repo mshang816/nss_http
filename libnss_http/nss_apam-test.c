@@ -28,19 +28,26 @@ while (1) {
     ret = _nss_apam_setpwent(0);
 
     while (_nss_apam_getpwent_r(&pwd, buffer, BUFFER_LEN, &_errno) == NSS_STATUS_SUCCESS) {
-        printf("name=%s, dir=%s, shell=%s, passwd=%s\n", pwd.pw_name, pwd.pw_dir, pwd.pw_shell, pwd.pw_passwd);
+        printf("1: name=%s, dir=%s, shell=%s, passwd=%s, pid=%d\n", pwd.pw_name, pwd.pw_dir, pwd.pw_shell, pwd.pw_passwd, pwd.pw_uid);
     }
     ret = _nss_apam_endpwent();
     printf("\n");
 
-
     ret = _nss_apam_setgrent(0);
     while (_nss_apam_getgrent_r(&grp, buffer, BUFFER_LEN, &_errno) == NSS_STATUS_SUCCESS) {
-        printf("name=%s, passwd=%s, gid=%d\n", grp.gr_name, grp.gr_passwd, grp.gr_gid);
+        printf("2: name=%s, passwd=%s, gid=%d\n", grp.gr_name, grp.gr_passwd, grp.gr_gid);
     }
     ret = _nss_apam_endgrent();
     printf("\n");
 
+    ret = _nss_apam_getpwnam_r("mike", &pwd, buffer, BUFFER_LEN, &_errno);
+
+    if (ret == NSS_STATUS_SUCCESS) {
+        printf("3: name=%s, dir=%s, shell=%s, passwd=%s, pid=%d\n", pwd.pw_name, pwd.pw_dir, pwd.pw_shell, pwd.pw_passwd, pwd.pw_uid);
+    } else {
+        printf("Failed to get passwd...\n");
+    }
+    printf("\n");
 
 }
     return 0;

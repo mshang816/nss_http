@@ -70,7 +70,7 @@ static void copy_passwd(struct passwd *result, char *buffer, size_t buflen, stru
     size_t tlen = 0;
 
     result->pw_name  = strncpy(buf, ent->name, len);
-    tlen = strlen(ent->name) + 1;
+    tlen = strlen(result->pw_name) + 1;
     len -= tlen;
     buf += tlen;
 
