@@ -17,6 +17,7 @@
 
 static struct user_entry_node *head;
 static struct user_entry_node *curr;
+static time_t now = 0;
 
 struct user_entry* get_next_user_entry() {
     if (curr == NULL) {
@@ -35,7 +36,7 @@ void free_all_entries(void) {
     }
     struct user_entry_node *node = head->next;
 
-    // resetting head->next and curr
+    // reset head->next and curr
     head->next = NULL;
     curr = NULL;
 
@@ -55,35 +56,22 @@ void free_all_entries(void) {
 
 // make sure load_all_entries() is called first
 static char** get_group_members(size_t count) {
-//    size_t count = 0;
-/*
-    curr = head->next;
-    while (curr != NULL) {
-        if (curr->ent->create_time +  SECONDS_BEFORE_EXP < now) {
-            ++count;
-        }
-
-        curr = curr->next;
-    }*/
-
     if (count == 0) {
         return NULL;
     }
 
-    time_t now = time(NULL);
-
     char **result = (char**)malloc(sizeof(char*) * (count + 1));
     char **ret = result;
 
-    curr = head->next;
+    struct user_entry_node *node = head->next;
 
-    while (curr != NULL) {
-        if (curr->ent->create_time +  SECONDS_BEFORE_EXP > now) {
-            *result = strdup(curr->ent->name);
+    while (node != NULL) {
+        if (node->ent->create_time +  SECONDS_BEFORE_EXP > now) {
+            *result = strdup(node->ent->name);
             result++;
         }
 
-        curr = curr->next;
+        node = node->next;
     }
 
     *result = NULL;
@@ -91,8 +79,6 @@ static char** get_group_members(size_t count) {
     return ret;
 }
 
-// TODO do not load_all_entries here ?
-// TODO assume that all group entries are loaded
 struct user_entry* find_entry_uid(uid_t uid) {
     struct user_entry *result = NULL;
     free_all_entries();
@@ -106,19 +92,22 @@ struct user_entry* find_entry_uid(uid_t uid) {
         result->members     = get_group_members(count);
         result->size        = count;
     } else {
-        while (curr != NULL) {
-            if (curr->ent->uid == uid) {
+        struct user_entry_node *node = head->next;
+
+        while (node != NULL) {
+            if (node->ent->uid == uid) {
                 // duplicate the found user_entry
-                result->name = strdup(curr->ent->name);
-                result->uid = curr->ent->uid;
-                result->create_time = curr->ent->create_time;
-                result->members = NULL;
                 result = (struct user_entry*)malloc(sizeof(struct user_entry));
+
+                result->name = strdup(node->ent->name);
+                result->uid = node->ent->uid;
+                result->create_time = node->ent->create_time;
+                result->members = NULL;
                 result->size = count;
                 break;
             }
 
-            curr = curr->next;
+            node = node->next;
         }
     }
 
@@ -189,13 +178,6 @@ struct user_entry* find_entry_name(const char *name) {
         return NULL;
     }
 
-    /*
-    time_t now = time(NULL);
-    if (statbuf.st_mtim.tv_sec + SECONDS_BEFORE_EXP < now) {
-        // expired
-        return NULL;
-    }*/
-
     uid_t uid = read_uid(name);
 
     if (uid == 0) {
@@ -215,6 +197,8 @@ struct user_entry* find_entry_name(const char *name) {
 
 size_t load_all_entries(uid_t *ret_max) {
     uid_t max = 0;
+    now = time(NULL);
+
     DIR *dir = opendir(SSH_KEYS_PATH);
 
     if (dir == NULL) {
@@ -229,7 +213,6 @@ size_t load_all_entries(uid_t *ret_max) {
 
     struct dirent *de;
     struct user_entry_node *c = head;
-    time_t now = time(NULL);
 
     while ((de = readdir(dir)) != NULL) {
         if (de->d_type != DT_DIR) {
@@ -266,6 +249,7 @@ size_t load_all_entries(uid_t *ret_max) {
         *ret_max = max;
     }
 
+    // reset curr to first entry
     curr = head->next;
 
     return count;
@@ -283,19 +267,15 @@ static void print_entry(struct user_entry *e) {
 
 int main(int argc, char **argv) {
 while (1) {
-    time_t now = time(NULL);
-
-    printf("the time now is %ld\n", now);
-
     uid_t max = 0;
     load_all_entries(&max);
 
-    curr = head->next;
+    struct group node = head->next;
 
-    while (curr != NULL) {
-        struct user_entry *e = curr->ent;
+    while (node != NULL) {
+        struct user_entry *e = node->ent;
         print_entry(e);
-        curr = curr->next;
+        node = node->next;
     }
 
     printf("max uid is %d\n", max);

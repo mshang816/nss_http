@@ -22,17 +22,13 @@ static pthread_mutex_t NSS_APAM_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 #define USER_GECOS          "Dynamic User"
 
 static enum nss_status
-_nss_apam_setpwent_locked(int stayopen)
-{
+_nss_apam_setpwent_locked(int stayopen) {
     load_all_entries(NULL);
     return NSS_STATUS_SUCCESS;
 }
 
-
-// Called to open the passwd file
 enum nss_status
-_nss_apam_setpwent(int stayopen)
-{
+_nss_apam_setpwent(int stayopen) {
     enum nss_status ret;
     NSS_APAM_LOCK();
     ret = _nss_apam_setpwent_locked(stayopen);
@@ -42,16 +38,13 @@ _nss_apam_setpwent(int stayopen)
 
 
 static enum nss_status
-_nss_apam_endpwent_locked(void)
-{
+_nss_apam_endpwent_locked(void) {
     free_all_entries();
     return NSS_STATUS_SUCCESS;
 }
 
-// Called to close the passwd file
 enum nss_status
-_nss_apam_endpwent(void)
-{
+_nss_apam_endpwent(void) {
     enum nss_status ret;
     NSS_APAM_LOCK();
     ret = _nss_apam_endpwent_locked();
@@ -97,10 +90,7 @@ static void copy_passwd(struct passwd *result, char *buffer, size_t buflen, stru
 }
 
 static enum nss_status
-_nss_apam_getpwent_r_locked(struct passwd *result, char *buffer, size_t buflen, int *errnop)
-{
-    memset(buffer, '\0', buflen);
-
+_nss_apam_getpwent_r_locked(struct passwd *result, char *buffer, size_t buflen, int *errnop) {
     struct user_entry *ent = get_next_user_entry();
 
     if (ent == NULL) {
@@ -115,8 +105,7 @@ _nss_apam_getpwent_r_locked(struct passwd *result, char *buffer, size_t buflen, 
 
 // Called to look up next entry in passwd file
 enum nss_status
-_nss_apam_getpwent_r(struct passwd *result, char *buffer, size_t buflen, int *errnop)
-{
+_nss_apam_getpwent_r(struct passwd *result, char *buffer, size_t buflen, int *errnop) {
     enum nss_status ret;
     NSS_APAM_LOCK();
     ret = _nss_apam_getpwent_r_locked(result, buffer, buflen, errnop);
@@ -127,10 +116,7 @@ _nss_apam_getpwent_r(struct passwd *result, char *buffer, size_t buflen, int *er
 
 // Find a passwd by uid
 static enum nss_status
-_nss_apam_getpwuid_r_locked(uid_t uid, struct passwd *result, char *buffer, size_t buflen, int *errnop)
-{
-    memset(buffer, '\0', buflen);
-
+_nss_apam_getpwuid_r_locked(uid_t uid, struct passwd *result, char *buffer, size_t buflen, int *errnop) {
     struct user_entry *ent = find_entry_uid(uid);
 
     if (ent == NULL) {
@@ -145,8 +131,7 @@ _nss_apam_getpwuid_r_locked(uid_t uid, struct passwd *result, char *buffer, size
 
 
 enum nss_status
-_nss_apam_getpwuid_r(uid_t uid, struct passwd *result, char *buffer, size_t buflen, int *errnop)
-{
+_nss_apam_getpwuid_r(uid_t uid, struct passwd *result, char *buffer, size_t buflen, int *errnop) {
     enum nss_status ret;
     NSS_APAM_LOCK();
     ret = _nss_apam_getpwuid_r_locked(uid, result, buffer, buflen, errnop);
@@ -156,8 +141,7 @@ _nss_apam_getpwuid_r(uid_t uid, struct passwd *result, char *buffer, size_t bufl
 
 
 static enum nss_status
-_nss_apam_getpwnam_r_locked(const char *name, struct passwd *result, char *buffer, size_t buflen, int *errnop)
-{
+_nss_apam_getpwnam_r_locked(const char *name, struct passwd *result, char *buffer, size_t buflen, int *errnop) {
     memset(buffer, '\0', buflen);
 
     struct user_entry *ent = find_entry_name(name);
@@ -175,8 +159,7 @@ _nss_apam_getpwnam_r_locked(const char *name, struct passwd *result, char *buffe
 
 // Find a passwd by name
 enum nss_status
-_nss_apam_getpwnam_r(const char *name, struct passwd *result, char *buffer, size_t buflen, int *errnop)
-{
+_nss_apam_getpwnam_r(const char *name, struct passwd *result, char *buffer, size_t buflen, int *errnop) {
     enum nss_status ret;
     NSS_APAM_LOCK();
     ret = _nss_apam_getpwnam_r_locked(name, result, buffer, buflen, errnop);
@@ -194,11 +177,8 @@ _nss_apam_setgrent_locked(int stayopen)
     return NSS_STATUS_SUCCESS;
 }
 
-
-// Called to open the group file
 enum nss_status
-_nss_apam_setgrent(int stayopen)
-{
+_nss_apam_setgrent(int stayopen) {
     enum nss_status ret;
     NSS_APAM_LOCK();
     ret = _nss_apam_setgrent_locked(stayopen);
@@ -208,8 +188,7 @@ _nss_apam_setgrent(int stayopen)
 
 
 enum nss_status
-_nss_apam_endgrent_locked(void)
-{
+_nss_apam_endgrent_locked(void) {
     free_all_entries();
     return NSS_STATUS_SUCCESS;
 }
@@ -217,8 +196,7 @@ _nss_apam_endgrent_locked(void)
 
 // Called to close the group file
 enum nss_status
-_nss_apam_endgrent(void)
-{
+_nss_apam_endgrent(void) {
     enum nss_status ret;
     NSS_APAM_LOCK();
     ret = _nss_apam_endgrent_locked();
@@ -268,10 +246,7 @@ static void copy_group(struct group *result, char *buffer, size_t buflen, struct
 }
 
 enum nss_status
-_nss_apam_getgrent_r_locked(struct group *result, char *buffer, size_t buflen, int *errnop)
-{
-    memset(buffer, '\0', buflen);
-
+_nss_apam_getgrent_r_locked(struct group *result, char *buffer, size_t buflen, int *errnop) {
     struct user_entry *ent = get_next_user_entry();
 
     if (ent == NULL) {
@@ -286,8 +261,7 @@ _nss_apam_getgrent_r_locked(struct group *result, char *buffer, size_t buflen, i
 
 // Called to look up next entry in group file
 enum nss_status
-_nss_apam_getgrent_r(struct group *result, char *buffer, size_t buflen, int *errnop)
-{
+_nss_apam_getgrent_r(struct group *result, char *buffer, size_t buflen, int *errnop) {
     enum nss_status ret;
     NSS_APAM_LOCK();
     ret = _nss_apam_getgrent_r_locked(result, buffer, buflen, errnop);
@@ -298,10 +272,7 @@ _nss_apam_getgrent_r(struct group *result, char *buffer, size_t buflen, int *err
 
 // Find a group by gid
 enum nss_status
-_nss_apam_getgrgid_r_locked(gid_t gid, struct group *result, char *buffer, size_t buflen, int *errnop)
-{
-    memset(buffer, '\0', buflen);
-
+_nss_apam_getgrgid_r_locked(gid_t gid, struct group *result, char *buffer, size_t buflen, int *errnop) {
     struct user_entry *ent = find_entry_uid(gid);
 
     if (ent == NULL) {
@@ -316,8 +287,7 @@ _nss_apam_getgrgid_r_locked(gid_t gid, struct group *result, char *buffer, size_
 
 
 enum nss_status
-_nss_apam_getgrgid_r(gid_t gid, struct group *result, char *buffer, size_t buflen, int *errnop)
-{
+_nss_apam_getgrgid_r(gid_t gid, struct group *result, char *buffer, size_t buflen, int *errnop) {
     enum nss_status ret;
     NSS_APAM_LOCK();
     ret = _nss_apam_getgrgid_r_locked(gid, result, buffer, buflen, errnop);
@@ -327,10 +297,7 @@ _nss_apam_getgrgid_r(gid_t gid, struct group *result, char *buffer, size_t bufle
 
 
 enum nss_status
-_nss_apam_getgrnam_r_locked(const char *name, struct group *result, char *buffer, size_t buflen, int *errnop)
-{
-    memset(buffer, '\0', buflen);
-
+_nss_apam_getgrnam_r_locked(const char *name, struct group *result, char *buffer, size_t buflen, int *errnop) {
     if (strcmp(name, APAM_GROUP) == 0) {
 
     }
@@ -350,8 +317,7 @@ _nss_apam_getgrnam_r_locked(const char *name, struct group *result, char *buffer
 
 // Find a group by name
 enum nss_status
-_nss_apam_getgrnam_r(const char *name, struct group *result, char *buffer, size_t buflen, int *errnop)
-{
+_nss_apam_getgrnam_r(const char *name, struct group *result, char *buffer, size_t buflen, int *errnop) {
     enum nss_status ret;
     NSS_APAM_LOCK();
     ret = _nss_apam_getgrnam_r_locked(name, result, buffer, buflen, errnop);
