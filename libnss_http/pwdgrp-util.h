@@ -1,5 +1,5 @@
-#define APAM_GROUP          "overlake"
-#define APAM_GID            40000
+#define APAM_GROUP          "apam"
+#define APAM_GID            50000
 #define SECONDS_BEFORE_EXP  (30*60)
 
 struct user_entry {
