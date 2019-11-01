@@ -34,6 +34,8 @@ void free_all_entries(void) {
         return;
     }
     struct user_entry_node *node = head->next;
+
+    // resetting head->next and curr
     head->next = NULL;
     curr = NULL;
 
@@ -41,7 +43,6 @@ void free_all_entries(void) {
         struct user_entry *ent = node->ent;
 
         free(ent->name);
-
         free(ent);
 
         struct user_entry_node *t = node;
@@ -49,25 +50,78 @@ void free_all_entries(void) {
 
         free(t);
     }
+
 }
 
-struct user_entry* find_entry_uid(uid_t uid) {
-    struct user_entry *result = NULL;
-    free_all_entries();
-    load_all_entries(NULL);
+// make sure load_all_entries() is called first
+static char** get_group_members(size_t count) {
+//    size_t count = 0;
+/*
+    curr = head->next;
+    while (curr != NULL) {
+        if (curr->ent->create_time +  SECONDS_BEFORE_EXP < now) {
+            ++count;
+        }
+
+        curr = curr->next;
+    }*/
+
+    if (count == 0) {
+        return NULL;
+    }
+
+    time_t now = time(NULL);
+
+    char **result = (char**)malloc(sizeof(char*) * (count + 1));
+    char **ret = result;
+
+    curr = head->next;
 
     while (curr != NULL) {
-        if (curr->ent->uid == uid) {
-            // duplicate the found user_entry
-            result = (struct user_entry*)malloc(sizeof(struct user_entry));
-            result->name = strdup(curr->ent->name);
-            result->uid = curr->ent->uid;
-            result->create_time = curr->ent->create_time;
-            break;
+        if (curr->ent->create_time +  SECONDS_BEFORE_EXP > now) {
+            *result = strdup(curr->ent->name);
+            result++;
         }
 
         curr = curr->next;
     }
+
+    *result = NULL;
+
+    return ret;
+}
+
+// TODO do not load_all_entries here ?
+// TODO assume that all group entries are loaded
+struct user_entry* find_entry_uid(uid_t uid) {
+    struct user_entry *result = NULL;
+    free_all_entries();
+    size_t count = load_all_entries(NULL);
+
+    if (uid == APAM_GID) {
+        result = (struct user_entry*)malloc(sizeof(struct user_entry));
+        result->name        = strdup(APAM_GROUP);
+        result->uid         = APAM_GID;
+        result->create_time = 0;
+        result->members     = get_group_members(count);
+        result->size        = count;
+    } else {
+        while (curr != NULL) {
+            if (curr->ent->uid == uid) {
+                // duplicate the found user_entry
+                result->name = strdup(curr->ent->name);
+                result->uid = curr->ent->uid;
+                result->create_time = curr->ent->create_time;
+                result->members = NULL;
+                result = (struct user_entry*)malloc(sizeof(struct user_entry));
+                result->size = count;
+                break;
+            }
+
+            curr = curr->next;
+        }
+    }
+
     free_all_entries();
     return result;
 }
@@ -75,6 +129,16 @@ struct user_entry* find_entry_uid(uid_t uid) {
 void free_entry(struct user_entry *ent) {
     if (ent == NULL) {
         return;
+    }
+
+    if (ent->members != NULL) {
+        char** members = ent->members;
+
+        while (*members != NULL) {
+            free(*members++);
+        }
+
+        free(ent->members);
     }
 
     free(ent->name);
@@ -113,6 +177,10 @@ static uid_t read_uid(const char *name) {
 }
 
 struct user_entry* find_entry_name(const char *name) {
+    if (strcmp(APAM_GROUP, name) == 0) {
+        return find_entry_uid(APAM_GID);
+    }
+
     char auth_keys_file[BUFFER_LENGTH];
     sprintf(auth_keys_file, "%s/%s/%s", SSH_KEYS_PATH, name, AUTH_KEYS_FILE);
 
@@ -120,6 +188,13 @@ struct user_entry* find_entry_name(const char *name) {
     if (stat(auth_keys_file, &statbuf) != 0) {
         return NULL;
     }
+
+    /*
+    time_t now = time(NULL);
+    if (statbuf.st_mtim.tv_sec + SECONDS_BEFORE_EXP < now) {
+        // expired
+        return NULL;
+    }*/
 
     uid_t uid = read_uid(name);
 
@@ -132,17 +207,20 @@ struct user_entry* find_entry_name(const char *name) {
     ret->name = strdup(name);
     ret->uid = uid;
     ret->create_time = statbuf.st_mtim.tv_sec;
+    ret->size = 0;
+    ret->members = NULL;
 
     return ret;
 }
 
-int load_all_entries(uid_t *ret_max) {
+size_t load_all_entries(uid_t *ret_max) {
     uid_t max = 0;
     DIR *dir = opendir(SSH_KEYS_PATH);
 
     if (dir == NULL) {
-        return 1;
+        return -1;
     }
+    size_t count = 0;
 
     if (head == NULL) {
         head = (struct user_entry_node*)malloc(sizeof(struct user_entry_node));
@@ -151,6 +229,7 @@ int load_all_entries(uid_t *ret_max) {
 
     struct dirent *de;
     struct user_entry_node *c = head;
+    time_t now = time(NULL);
 
     while ((de = readdir(dir)) != NULL) {
         if (de->d_type != DT_DIR) {
@@ -162,6 +241,7 @@ int load_all_entries(uid_t *ret_max) {
             continue;
         }
         
+        // expired users will be filtered out here
         struct user_entry *ent = find_entry_name(de->d_name);
 
         if (ent == NULL || ent->uid == 0) {
@@ -174,6 +254,10 @@ int load_all_entries(uid_t *ret_max) {
         c->ent = ent;
 
         max = ent->uid > max ? ent->uid : max;
+
+        if (ent->create_time + SECONDS_BEFORE_EXP < now) {
+            ++count;
+        }
     }
 
     closedir(dir);
@@ -184,7 +268,7 @@ int load_all_entries(uid_t *ret_max) {
 
     curr = head->next;
 
-    return 0;
+    return count;
 }
 
 #ifndef NDEBUG
@@ -204,7 +288,7 @@ while (1) {
     printf("the time now is %ld\n", now);
 
     uid_t max = 0;
-    int ret = load_all_entries(&max);
+    load_all_entries(&max);
 
     curr = head->next;
 

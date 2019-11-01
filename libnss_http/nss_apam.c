@@ -59,7 +59,6 @@ _nss_apam_endpwent(void)
     return ret;
 }
 
-#define SECONDS_BEFORE_EXP  (2*60)
 #define BUFFER_LENGTH       512
 
 static void copy_passwd(struct passwd *result, char *buffer, size_t buflen, struct user_entry *ent) {
@@ -244,6 +243,28 @@ static void copy_group(struct group *result, char *buffer, size_t buflen, struct
 
     result->gr_passwd = USER_PASSWD;
     result->gr_gid    = ent->uid;
+    tlen = sizeof(char*) * (ent->size + 1);
+    result->gr_mem = (char**) buf;
+    len -= tlen;
+    buf += tlen;
+
+    char **members = ent->members;
+
+    if (members != NULL) {
+        char **dest    = result->gr_mem;
+
+        while (*members != NULL) {
+            *dest = strncpy(buf, *members, len);
+            tlen  = strlen(*dest);
+            len -= tlen;
+            buf += tlen;
+    
+            ++members;
+            ++dest;
+        }
+
+        *dest = NULL;
+    }
 }
 
 enum nss_status
@@ -309,6 +330,10 @@ enum nss_status
 _nss_apam_getgrnam_r_locked(const char *name, struct group *result, char *buffer, size_t buflen, int *errnop)
 {
     memset(buffer, '\0', buflen);
+
+    if (strcmp(name, APAM_GROUP) == 0) {
+
+    }
 
     struct user_entry *ent = find_entry_name(name);
 

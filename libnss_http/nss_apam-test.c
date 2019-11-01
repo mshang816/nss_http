@@ -17,6 +17,50 @@ enum nss_status _nss_apam_getgrnam_r(const char *name, struct group *result, cha
 
 #define BUFFER_LEN  1024
 
+void print_grp(enum nss_status ret, struct group *grp) {
+    if (ret == NSS_STATUS_SUCCESS) {
+        printf("name=%s, passwd=%s, gid=%d\n", grp->gr_name, grp->gr_passwd, grp->gr_gid);
+
+        char **members = grp->gr_mem;
+
+        if (*members != NULL) {
+            printf("\tmembers:\n");
+
+            while (*members != NULL) {
+                printf("\tmember=%s\n", *members++);
+            }
+        }
+    } else {
+        printf("Failed to get group...\n");
+    }
+
+    printf("\n");
+}
+
+void test_find_grp_gid(gid_t gid) {
+    enum nss_status ret;
+    char buffer[BUFFER_LEN];
+    struct group grp;
+    int _errno = 0;
+
+    ret = _nss_apam_getgrgid_r(gid, &grp, buffer, BUFFER_LEN, &_errno);
+    
+    printf("gid: %d\n", gid);
+    print_grp(ret, &grp);
+}
+
+void test_find_grp_name(const char *name) {
+    enum nss_status ret;
+    char buffer[BUFFER_LEN];
+    struct group grp;
+    int _errno = 0;
+
+    ret = _nss_apam_getgrnam_r(name, &grp, buffer, BUFFER_LEN, &_errno);
+
+    printf("name: %s\n", name);
+    print_grp(ret, &grp);
+}
+
 int main(int argc, char** argv) {
     enum nss_status ret;
     struct passwd pwd;
@@ -49,6 +93,11 @@ while (1) {
     }
     printf("\n");
 
+    test_find_grp_name("mike");
+    test_find_grp_name("apam");
+    test_find_grp_gid(5000);
+
+    test_find_grp_gid(50000);
 }
     return 0;
 }
